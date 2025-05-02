@@ -5,7 +5,6 @@ class UAVNavigator:
                  depth_analyzer, visualizer, data_streamer,
                  obstacle_manager, apf_navigator, collision_detector, 
                  simulation_time, step_size):
-        
         """Initialize the UAV navigator."""
 
         self.sim_interface          = sim_interface
@@ -25,11 +24,8 @@ class UAVNavigator:
         self.current_pos            = self.sim_interface.get_object_position('target')
 
     def autonomous_move(self, label, apf_direction):
-
         """Move the UAV based on safe direction and APF force."""
-
         x, y, z = self.current_pos
-        # Use safe direction if available
         if label == "forward":
             y += self.step_size
         elif label == "right":
@@ -41,7 +37,6 @@ class UAVNavigator:
         elif label == "up":
             z += self.step_size
 
-        # Adjust movement with APF direction
         if label != "stop":
             apf_x, apf_y = apf_direction * self.step_size
             x += apf_x
@@ -50,9 +45,7 @@ class UAVNavigator:
         self.current_pos = [x, y, z]
 
     def run(self):
-
         """Run the UAV simulation loop."""
-
         try:
             while self.sim_interface.get_simulation_time() < self.simulation_time:
 
@@ -76,17 +69,6 @@ class UAVNavigator:
                 # Step 5: Update and draw visualization
                 self.visualizer.update_depth_display(depth_resized)
 
-                # Step 5: Virtual obstacle from depth (if needed)
-                virtual_obstacles = []
-                current_pos = self.sim_interface.get_object_position('target')
-                for region, avg in region_depths.items():
-                    if avg < self.depth_analyzer.depth_threshold:
-                        angle = self.depth_analyzer.map_region_to_angle(region)
-                        x = current_pos[0] + 0.5 * np.cos(angle)
-                        y = current_pos[1] + 0.5 * np.sin(angle)
-                        virtual_obstacles.append([x, y, current_pos[2]])
-                self.obstacle_manager.add_virtual_obstacles(virtual_obstacles)
-
                 # Step 6: Calculate APF force
                 uav_pos     = self.sim_interface.get_object_position('drone')
                 goal_pos    = self.sim_interface.get_object_position('goal')
@@ -95,7 +77,6 @@ class UAVNavigator:
 
                 # Step 7: Move the UAV
                 self.current_pos = self.keyboard_controller.update_position(self.current_pos, self.step_size)  # Manual control
-                self.autonomous_move(label, apf_direction)
                 self.sim_interface.set_object_position('target', self.current_pos)
 
                 # Step 7: Visualize flight path
@@ -131,9 +112,7 @@ class UAVNavigator:
             self.cleanup()
 
     def cleanup(self):
-
         """Clean up resources."""
-
         self.keyboard_controller.stop()
         self.sim_interface.stop_simulation()
         self.data_streamer.close()

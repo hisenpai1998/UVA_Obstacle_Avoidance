@@ -2,8 +2,6 @@ from coppeliasim_zmqremoteapi_client    import RemoteAPIClient
 from config                             import OBJECT_PATHS
 
 class CoppeliaSimInterface:
-    # Predefined object paths in the CoppeliaSim scene
-
     def __init__(self, host='localhost', port=23000):
         """Initialize the CoppeliaSim remote API client."""
         try:
@@ -20,7 +18,6 @@ class CoppeliaSimInterface:
         """Retrieve object handles from the simulator."""
         try:
             for key, path in self.object_paths.items():
-
                 if isinstance(path, str):
                     print(f"Trying to get handle for {key} at path: {path}")
                     self.handles[key] = self.sim.getObject(path)
