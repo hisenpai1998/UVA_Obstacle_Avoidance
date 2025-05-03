@@ -83,9 +83,15 @@ class UAVNavigator:
                 wall_positions  = [self.sim_interface.get_object_position(name) for name in self.sim_interface.object_paths['walls']]
                 apf_direction   = self.apf_navigator.calculate_force(self.current_pos, goal_pos, all_obstacles, wall_positions)
 
+                # Step 7: Check for manual control input
+                manual_pos = self.keyboard_controller.update_position(self.current_pos, self.step_size)
 
-                # Step 7: Move UAV using APF direction
-                self.autonomous_move(apf_direction)
+                if manual_pos != self.current_pos:
+                    self.current_pos = manual_pos
+                else:
+                    # If not Move UAV using APF direction
+                    self.autonomous_move(apf_direction)
+                
                 self.sim_interface.set_object_position('target', self.current_pos)
 
                 # Step 8: Visualize flight path
@@ -124,7 +130,9 @@ class UAVNavigator:
             self.cleanup()
 
     def cleanup(self):
+
         """Clean up resources."""
+
         self.keyboard_controller.stop()
         self.sim_interface.stop_simulation()
         self.data_streamer.close()

@@ -5,7 +5,9 @@ class CoppeliaSimInterface:
     # Predefined object paths in the CoppeliaSim scene
 
     def __init__(self, host='localhost', port=23000):
+
         """Initialize the CoppeliaSim remote API client."""
+
         try:
             self.client = RemoteAPIClient(host, port)
             self.sim = self.client.getObject('sim')
@@ -13,7 +15,6 @@ class CoppeliaSimInterface:
             self.object_paths = OBJECT_PATHS
             self.handles = {}
 
-            # ✅ Load handle cho tất cả object path từ config
             for key, paths in self.object_paths.items():
                 if isinstance(paths, list):
                     for p in paths:
@@ -26,7 +27,9 @@ class CoppeliaSimInterface:
             exit()
 
     def get_object_handles(self):
+
         """Retrieve object handles from the simulator."""
+
         try:
             for key, path in self.object_paths.items():
 
@@ -61,31 +64,42 @@ class CoppeliaSimInterface:
             exit()
 
     def start_simulation(self):
+
         """Start the simulation and enable stepping."""
+
         self.sim.startSimulation()
         print("Simulation started.")
         self.sim.setStepping(True)
 
     def stop_simulation(self):
+
         """Stop the simulation."""
+
         self.sim.stopSimulation()
         print("Simulation stopped.")
 
     def step(self):
+
         """Advance the simulation by one step (when stepping is enabled)."""
+
         self.sim.step()
 
     def get_simulation_time(self):
+
         """Return the current simulation time."""
+
         return self.sim.getSimulationTime()
 
     def get_vision_sensor_data(self):
+
         """Get depth image data from the vision sensor."""
+
         self.sim.handleVisionSensor(self.handles['vision_sensor'])
         depth_bytes, resolution = self.sim.getVisionSensorDepth(self.handles['vision_sensor'])
         return depth_bytes, resolution
 
     def set_object_position(self, object_key, position, index=None):
+
         """Set the position of a specified object.
         
         Args:
@@ -93,6 +107,7 @@ class CoppeliaSimInterface:
             position (list): [x, y, z] position coordinates
             index (int, optional): Index for objects with multiple instances. Defaults to None.
         """
+        
         handle = self.handles[object_key]
         if isinstance(handle, list):
             if index is None:
@@ -102,6 +117,7 @@ class CoppeliaSimInterface:
             self.sim.setObjectPosition(handle, -1, position)
 
     def get_object_position(self, object_key, index=None):
+
         """Get the position of a specified object.
         
         Args:
@@ -111,6 +127,7 @@ class CoppeliaSimInterface:
         Returns:
             list: [x, y, z] position coordinates
         """
+
         handle = self.handles[object_key]
         if isinstance(handle, list):
             if index is None:
