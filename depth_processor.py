@@ -4,11 +4,15 @@ from config         import DEPTH_THRESHOLD
 
 class DepthAnalyzer:
     def __init__(self, depth_threshold):
+
         """Initialize the depth analyzer."""
+
         self.depth_threshold = depth_threshold
 
     def process_depth_data(self, depth_bytes, resolution):
+
         """Convert raw depth bytes to a resized depth array."""
+
         resX, resY      = resolution
         depth_array     = np.frombuffer(depth_bytes, dtype=np.float32).reshape(resY, resX)
         depth_array     = np.flipud(depth_array)
@@ -16,7 +20,9 @@ class DepthAnalyzer:
         return depth_resized
 
     def analyze_9_regions(self, depth_image):
+
         """Analyze the depth image by dividing it into 9 regions."""
+
         h, w    = depth_image.shape
         region_depths = {}
 
@@ -38,9 +44,9 @@ class DepthAnalyzer:
 
         print("\n🟦 Terminal View: 3×3 Region Depths")
         label_order = [
-            ['up-left', 'up', 'up-right'],
-            ['left', 'front', 'right'],
-            ['down-left', 'down', 'down-right']
+            ['up-left'  , 'up'      , 'up-right'  ],
+            ['left'     , 'front'   , 'right'     ],
+            ['down-left', 'down'    , 'down-right']
         ]
 
         # Compute avg and store
@@ -61,7 +67,9 @@ class DepthAnalyzer:
         return safe_regions, region_depths
 
     def find_safe_directions(self, depth_image):
-        """Analyze depth image to find safe directions in 2D (16 sectors)."""
+
+        """Analyze depth image to find safe directions in 2D (16 SECTOR)."""
+
         h, w                = depth_image.shape
         center_y, center_x  = h // 2, w // 2
         Y, X                = np.ogrid[:h, :w]
@@ -94,6 +102,7 @@ class DepthAnalyzer:
         return safe_sectors, sector_angles, sectors
 
     def choose_direction(self, safe_regions, region_depths, safe_sectors=None, sectors=None):
+
         """Choose the safest direction based on the 9 regions."""
 
         if region_depths['front'] < self.depth_threshold * 1.5:  # Adding safety margin
@@ -115,15 +124,15 @@ class DepthAnalyzer:
 
         # Map regions to directions and angles (simplified)
         direction_map = {
-            'front'     : ('forward', 0),              # 0   degrees
-            'up'        : ('up'     , 0),              # Treated as forward for simplicity
+            'front'     : ('forward',   0),            # 0   degrees
+            'up'        : ('up'     ,   0),            # Treated as forward for simplicity
             'down'      : ('down'   , 180),            # Treated as downward
             'left'      : ('left'   , 270),            # 270 degrees
-            'right'     : ('right'  , 90),             # 90  degrees
+            'right'     : ('right'  ,  90),            # 90  degrees
             'up-left'   : ('left'   , 270),
             'down-left' : ('left'   , 270),
-            'up-right'  : ('right'  , 90),
-            'down-right': ('right'  , 90)
+            'up-right'  : ('right'  ,  90),
+            'down-right': ('right'  ,  90)
         }
 
         # Add minimum depth threshold for movement
@@ -134,18 +143,19 @@ class DepthAnalyzer:
         # Default to stop if the region isn't in the map
         label, angle = direction_map.get(best_region, ('stop', 0))
         return label, angle  # Returning sector as 0 since we're not using sectors
-    
+
     def map_region_to_angle(self, region):
         """Map a region to an angle in radians for virtual obstacle placement."""
         angle_map = {
-            'up-left': 3 * np.pi / 4,    # 135 degrees
-            'up': 0,                     # 0 degrees
-            'up-right': np.pi / 4,       # 45 degrees
-            'left': 3 * np.pi / 2,       # 270 degrees
-            'front': np.pi / 2,          # 90 degrees (center, but we use right for consistency)
-            'right': np.pi / 2,          # 90 degrees
-            'down-left': 5 * np.pi / 4,  # 225 degrees
-            'down': np.pi,               # 180 degrees
-            'down-right': 7 * np.pi / 4  # 315 degrees
+                'up-left':      [-0.5, 0.5, 0],
+                'up':           [   0, 0.5, 0],
+                'up-right':     [ 0.5, 0.5, 0],
+                'left':         [-0.5,   0, 0],
+                'front':        [   0,   0, 0],  # Center, might not need virtual obstacle
+                'right':        [ 0.5,   0, 0],
+                'down-left':    [-0.5,-0.5, 0],
+                'down':         [   0,-0.5, 0],
+                'down-right':   [ 0.5,-0.5, 0]
         }
         return angle_map.get(region, 0)  # Default to 0 if region not found
+    

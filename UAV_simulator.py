@@ -1,13 +1,11 @@
 from config                 import STEP_SIZE, DEPTH_THRESHOLD, SIMULATION_TIME, STREAM_FILE
 from config                 import OBJECT_PATHS
 
-
 from coppeliasim_interface  import CoppeliaSimInterface
 from keyboard_manager       import KeyboardController
 from depth_processor        import DepthAnalyzer
 from plot                   import Visualizer
 from stream_manager         import DataStreamer
-
 
 from UAV_navigator          import UAVNavigator
 from obstacle_manager       import ObstacleManager

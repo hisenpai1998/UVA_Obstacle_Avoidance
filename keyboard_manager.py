@@ -2,7 +2,9 @@ from pynput import keyboard
 
 class KeyboardController:
     def __init__(self):
+
         """Initialize the keyboard controller."""
+
         self.keys_pressed = {'w': False, 
                              's': False, 
                              'a': False, 
@@ -13,17 +15,23 @@ class KeyboardController:
         self.listener = None
 
     def start(self):
+
         """Start the keyboard listener."""
+
         self.listener = keyboard.Listener(on_press=self._on_press, on_release=self._on_release)
         self.listener.start()
 
     def stop(self):
+
         """Stop the keyboard listener."""
+
         if self.listener is not None:
             self.listener.stop()
 
     def _on_press(self, key):
+
         """Handle key press events."""
+
         try:
             if key.char in self.keys_pressed:
                 self.keys_pressed[key.char] = True
@@ -34,7 +42,9 @@ class KeyboardController:
                 return False
 
     def _on_release(self, key):
+
         """Handle key release events."""
+        
         try:
             if key.char in self.keys_pressed:
                 self.keys_pressed[key.char] = False
@@ -43,7 +53,9 @@ class KeyboardController:
                 self.keys_pressed['space']  = False
 
     def update_position(self, current_pos, step_size):
+
         """Update position based on keyboard input, with reset option."""
+        
         x, y, z = current_pos
         if self.keys_pressed['w']:  # Forward (+y)
             y += step_size
