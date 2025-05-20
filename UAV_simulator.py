@@ -6,31 +6,39 @@ from keyboard_manager       import KeyboardController
 from depth_processor        import DepthAnalyzer
 from plot                   import Visualizer
 from stream_manager         import DataStreamer
-
+from environment_generator  import EnvironmentGenerator
 from UAV_navigator          import UAVNavigator
 from obstacle_manager       import ObstacleManager
 from APF_navigator          import APFNavigator
 from collision_detector     import CollisionDetector
 
-
 class UAVSimulator:
+
     def __init__(self, host='localhost', port=23000):
-        """Initialize the UAV simulator."""
+        """
+        Initialize the UAV simulator with the given host and port.
+        """
         self.sim_interface       = CoppeliaSimInterface(host, port)
         self.keyboard_controller = KeyboardController()
         self.depth_analyzer      = DepthAnalyzer(DEPTH_THRESHOLD)
         self.visualizer          = Visualizer()
         self.data_streamer       = DataStreamer(STREAM_FILE)
-        self.obstacle_manager    = ObstacleManager(self.sim_interface, OBJECT_PATHS['obstacles'])
+        self.obstacle_manager    = ObstacleManager(self.sim_interface, OBJECT_PATHS.get('walls', []))
         self.apf_navigator       = APFNavigator()
         self.collision_detector  = CollisionDetector()
+        self.environment_generator = EnvironmentGenerator(
+            self.sim_interface,
+            self.obstacle_manager,
+            self.sim_interface.handles['floor'],
+            self.sim_interface.handles['target'],
+            self.sim_interface.handles['drone'],
+            self.sim_interface.handles['goal']
+        )
 
-        # Start the simulation and components
         self.sim_interface.start_simulation()
         self.sim_interface.get_object_handles()
         self.keyboard_controller.start()
 
-        # Initialize the navigator
         self.navigator = UAVNavigator(
             self.sim_interface,
             self.keyboard_controller,
@@ -45,9 +53,20 @@ class UAVSimulator:
         )
 
     def run(self):
-        """Run the simulation."""
+        """
+        Run the UAV simulation.
+        """
+        self.environment_generator.setup_environment(
+            tree_count=60,
+            n_dyn=5,
+            dyn_size=[0.2, 0.2, 0.2],
+            vel_xyz=[0.1, 0.1, 0.15]
+        )
+        self.navigator.current_pos = self.sim_interface.get_object_position('target')
         self.navigator.run()
 
     def read_saved_data(self):
-        """Read and print the saved data."""
+        """
+        Read the saved data from the simulation.
+        """ 
         self.data_streamer.read_saved_data(STREAM_FILE)

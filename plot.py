@@ -78,16 +78,23 @@ class Visualizer:
         self.fig_depth.canvas.draw_idle()
         self.fig_depth.canvas.flush_events()
 
-    def update_path_display(self, uav_pos, goal_pos):
+    def update_path_display(self, uav_pos, goal_pos, label_str='stop'):
         self.path_x.append(uav_pos[0])
         self.path_y.append(uav_pos[1])
         
-        # Draw fight path
+        # Draw flight path
         self.path_dots.set_offsets(np.c_[self.path_x, self.path_y])
         
         # Update drone and goal marker
         self.drone_marker.set_offsets([uav_pos[0], uav_pos[1]])
         self.goal_marker.set_offsets([goal_pos[0], goal_pos[1]])
+        
+        # Add rotation indicator
+        if label_str in ['rotate_left', 'rotate_right']:
+            self.ax_path.text(
+                uav_pos[0], uav_pos[1], '↻' if label_str == 'rotate_left' else '↺',
+                color='purple', fontsize=12, ha='center', va='center'
+            )
         
         # Update display axes limits
         all_x = self.path_x + [goal_pos[0]]
@@ -101,4 +108,6 @@ class Visualizer:
 
     def close(self):
         plt.ioff()
+
         plt.close('all')
+        

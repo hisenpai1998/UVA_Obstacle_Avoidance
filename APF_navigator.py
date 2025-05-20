@@ -5,7 +5,9 @@ import numpy    as np
 class APFNavigator:
     def __init__(self, floor_repulsion=True, floor_k=1.0, floor_safe_height=0.5, floor_z=0.0):
 
-        """ Initialize the APF navigator with parameters for floor repulsion."""
+        """ 
+        Initialize the APF navigator with parameters for floor repulsion.
+        """
 
         self.floor_repulsion    = floor_repulsion
         self.floor_k            = floor_k
@@ -14,7 +16,9 @@ class APFNavigator:
 
     def calculate_force(self, uav_pos, goal_pos, obstacle_positions, wall_positions=None):
 
-        """Calculate the total force using APF in 3D."""
+        """
+        Calculate the total force using APF in 3D.
+        """
 
         uav_pos     = np.array(uav_pos)
         goal_pos    = np.array(goal_pos)

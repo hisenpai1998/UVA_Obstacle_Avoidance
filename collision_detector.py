@@ -4,13 +4,17 @@ from config     import COLLISION_DISTANCE
 class CollisionDetector:
     def __init__(self):
 
-        """Initialize the collision detector."""
+        """
+        Initialize the collision detector.
+        """
 
         pass
 
     def check_collision(self, uav_pos, obstacle_positions):
 
-        """Check if the UAV collides with any obstacle."""
+        """
+        Check if the UAV collides with any obstacle.
+        """
         
         uav_pos = np.array(uav_pos[:2])
         for obs_pos in obstacle_positions:

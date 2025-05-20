@@ -2,8 +2,10 @@ from UAV_simulator import UAVSimulator
 
 def main():
 
-    """Run the UAV simulation."""
+    """
+    Run the UAV simulation.
     
+    """
     simulator = UAVSimulator()
     simulator.run()
     simulator.read_saved_data()

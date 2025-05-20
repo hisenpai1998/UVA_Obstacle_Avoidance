@@ -1,54 +1,67 @@
 import numpy as np
 
 class ObstacleManager:
-    def __init__(self, sim_interface, obstacle_keys):
+    def __init__(self, sim_interface, static_paths=[]):
+        """
+        Initialize the obstacle manager.
+        """	
+        self.sim_interface = sim_interface
+        self.floor_handle = sim_interface.handles['floor']
+        self.fx, self.fy, self.fz = sim_interface.sim.getObjectPosition(self.floor_handle, -1)
+        self.min_x, self.max_x, self.min_y, self.max_y = self.get_floor_extents()
+        self.min_z = self.fz + 0.3
+        self.max_z = self.fz + 2.0
+        self.bounds = [[self.min_x, self.max_x], [self.min_y, self.max_y], [self.min_z, self.max_z]]
+        self.static_obstacles = [sim_interface.sim.getObject(p) for p in static_paths]
+        self.dynamic_obstacles = []
 
-        """Initialize the obstacle manager."""
-
-        self.sim_interface      = sim_interface
-        self.num_obstacles      = len(obstacle_keys)    # Store the number of obstacles
-        self.virtual_obstacles  = []                    # Store virtual obstacle positions
-        self.time               = 0
+    def add_obstacle(self, handle, is_dynamic=False, velocity=None, size=None):
+        """
+        Add an obstacle to the manager.
+        """
+        if is_dynamic:
+            self.dynamic_obstacles.append({'handle': handle, 'velocity': np.array(velocity), 'size': size})
+        else:
+            self.static_obstacles.append(handle)
 
     def update_obstacles(self, dt):
-
-        """Update the positions of all obstacles."""
-
-        self.time += dt
-        for i in range(self.num_obstacles):
-            try:
-                key = self.obstacle_keys[i]
-                # Example: Simple sinusoidal motion for obstacles
-                current_pos = self.sim_interface.get_object_position('obstacles', index=i)
-                x = current_pos[0] + 0.1 * np.sin(self.time + i * np.pi / 3)                    # Unique motion per Cuboid
-                y = current_pos[1] + 0.1 * np.cos(self.time + i * np.pi / 3)                    # Unique motion per Cuboid      
-                z = current_pos[2]  # Keep z constant
-                self.sim_interface.set_object_position('obstacles', [x, y, z], index=i)
-
-            except Exception as e:
-                print(f"[ERROR] Failed to update obstacle {i}: {e}")
-                continue
-
-    def add_virtual_obstacles(self, virtual_obstacles):
-
-        """Add virtual obstacles to the manager."""
-
-        self.virtual_obstacles = virtual_obstacles
+        """
+        Update the positions of dynamic obstacles.
+        """
+        for obs in self.dynamic_obstacles:
+            pos = np.array(self.sim_interface.sim.getObjectPosition(obs['handle'], -1))
+            vel = obs['velocity']
+            pos += vel * dt
+            s = obs['size']
+            for j in range(3):
+                lo, hi = self.bounds[j]
+                half = s[j] / 2
+                if pos[j] - half < lo:
+                    pos[j] = lo + half
+                    vel[j] *= -0.8
+                elif pos[j] + half > hi:
+                    pos[j] = hi - half
+                    vel[j] *= -0.8
+            self.sim_interface.sim.setObjectPosition(obs['handle'], -1, pos.tolist())
+            obs['velocity'] = vel
 
     def get_obstacle_positions(self):
+        """
+        Get the positions of all obstacles.
+        """
+        positions = {}
+        for h in self.static_obstacles:
+            positions[h] = self.sim_interface.sim.getObjectPosition(h, -1)
+        for obs in self.dynamic_obstacles:
+            positions[obs['handle']] = self.sim_interface.sim.getObjectPosition(obs['handle'], -1)
+        return positions
 
-        """Get the current positions of all obstacles, including virtual ones."""
-        
-        # Get positions of physical obstacles
-        dynamic_positions = {}
-        for i in range(self.num_obstacles):
-            try:
-                dynamic_positions[f"obstacle_{i}"] = self.sim_interface.get_object_position('obstacles', index=i)
-            except Exception as e:
-                print(f"[ERROR] Failed to get position for obstacle {i}: {e}")
-                continue
-
-        # Add virtual obstacles
-        virtual_positions = {f"virtual_{i}": pos for i, pos in enumerate(self.virtual_obstacles)}
-        
-        return {**dynamic_positions, **virtual_positions}
+    def get_floor_extents(self):
+        """
+        Get the extents of the floor.
+        """
+        min_x = self.sim_interface.sim.getObjectFloatParameter(self.floor_handle, 15)[1]
+        min_y = self.sim_interface.sim.getObjectFloatParameter(self.floor_handle, 16)[1]
+        max_x = self.sim_interface.sim.getObjectFloatParameter(self.floor_handle, 18)[1]
+        max_y = self.sim_interface.sim.getObjectFloatParameter(self.floor_handle, 19)[1]
+        return min_x, max_x, min_y, max_y
