@@ -72,15 +72,15 @@ class DepthAnalyzer:
         """
         # Direction map with labels and normalized 3D vectors
         direction_map = {
-            'front':    {'label': 0, 'label_str': 'forward',    'vector': np.array([ 0, 1,  0])},
-            'back':     {'label': 1, 'label_str': 'backward',   'vector': np.array([ 0, -1, 0])},
-            'up':       {'label': 2, 'label_str': 'up',         'vector': np.array([ 0, 0,  1])},
-            'down':     {'label': 3, 'label_str': 'down',       'vector': np.array([ 0, 0, -1])},
-            'left':     {'label': 4, 'label_str': 'left',       'vector': np.array([-1, 0,  0])},
-            'right':    {'label': 5, 'label_str': 'right',      'vector': np.array([ 1, 0,  0])},
-            'stop':     {'label': 6, 'label_str': 'stop',       'vector': np.array([ 0, 0,  0])},
-            'rotate_left':  {'label': 7, 'label_str': 'rotate_left',  'vector': np.array([0, 0, 0])},
-            'rotate_right': {'label': 8, 'label_str': 'rotate_right', 'vector': np.array([0, 0, 0])}
+            'front':        {'label': 0, 'label_str': 'forward',        'vector': np.array([ 0, 1,  0])},
+            'back':         {'label': 1, 'label_str': 'backward',       'vector': np.array([ 0,-1,  0])},
+            'up':           {'label': 2, 'label_str': 'up',             'vector': np.array([ 0, 0,  1])},
+            'down':         {'label': 3, 'label_str': 'down',           'vector': np.array([ 0, 0, -1])},
+            'left':         {'label': 4, 'label_str': 'left',           'vector': np.array([-1, 0,  0])},
+            'right':        {'label': 5, 'label_str': 'right',          'vector': np.array([ 1, 0,  0])},
+            'stop':         {'label': 6, 'label_str': 'stop',           'vector': np.array([ 0, 0,  0])},
+            'rotate_left':  {'label': 7, 'label_str': 'rotate_left',    'vector': np.array([ 0, 0,  0])},
+            'rotate_right': {'label': 8, 'label_str': 'rotate_right',   'vector': np.array([ 0, 0,  0])}
         }
 
         if region_depths.get('front', float('inf')) < self.depth_threshold * 1.5:
@@ -105,44 +105,47 @@ class DepthAnalyzer:
 
     def vector_to_label(self, vector, yaw):
         """
-        Convert a 3D vector (world frame) into a label based on local drone yaw.
-
+        Convert a movement vector into a label based on the drone's yaw.
+        Uses the same coordinate system as keyboard_manager.py:
+        - Forward (+Y) = [sin(yaw), cos(yaw)]
+        - Right (+X) = [cos(yaw), -sin(yaw)]
         """
         if np.linalg.norm(vector) < 1e-6: 
             return 6, 'stop', vector
 
-        # Rotate vector into drone's local frame (reverse yaw)
-        cos_yaw = np.cos(-yaw)
-        sin_yaw = np.sin(-yaw)
+        # Normalize input vector
+        norm_vector = vector / np.linalg.norm(vector)
 
-        rot_matrix = np.array([
-            [cos_yaw, -sin_yaw, 0],
-            [sin_yaw,  cos_yaw, 0],
-            [     0 ,       0, 1]
-        ])
+        # Create rotation matrix to transform world coordinates to drone's local frame
+        forward = np.array([-np.sin(yaw), -np.cos(yaw)])    # Local +Y axis
+        right = np.array([-np.cos(yaw), -np.sin(yaw)])     # Local +X axis        # Project movement vector onto local axes
+        forward_component = np.dot(norm_vector[:2], forward)    # XY plane movement
+        right_component = np.dot(norm_vector[:2], right)      # XY plane movement
+        up_component = norm_vector[2] if len(norm_vector) > 2 else 0  # Z axis movement
 
-        local_vector = rot_matrix @ (vector / np.linalg.norm(vector))
+        # Determine the dominant direction
+        abs_forward = abs(forward_component)
+        abs_right = abs(right_component)
+        abs_up = abs(up_component)
 
-        direction_map = {
-            'front':    {'label': 0, 'label_str': 'forward',    'vector': np.array([ 0, 1,  0])},
-            'back':     {'label': 1, 'label_str': 'backward',   'vector': np.array([ 0, -1, 0])},
-            'up':       {'label': 2, 'label_str': 'up',         'vector': np.array([ 0, 0,  1])},
-            'down':     {'label': 3, 'label_str': 'down',       'vector': np.array([ 0, 0, -1])},
-            'left':     {'label': 4, 'label_str': 'left',       'vector': np.array([-1, 0,  0])},
-            'right':    {'label': 5, 'label_str': 'right',      'vector': np.array([ 1, 0,  0])},
-            'stop':     {'label': 6, 'label_str': 'stop',       'vector': np.array([ 0, 0,  0])},
-            'rotate_left':  {'label': 7, 'label_str': 'rotate_left',  'vector': np.array([0, 0, 0])},
-            'rotate_right': {'label': 8, 'label_str': 'rotate_right', 'vector': np.array([0, 0, 0])}
-        }
-
-        max_dot = -1
-        best_label = None
-        for key, value in direction_map.items():
-            dot = np.dot(local_vector, value['vector'])
-            if dot > max_dot:
-                max_dot = dot
-                best_label = key
-
-        if max_dot < 0.5:
+        # Check if movement is too small in all directions
+        if max(abs_forward, abs_right, abs_up) < 0.3:
             return 6, 'stop', vector
-        return direction_map[best_label]['label'], direction_map[best_label]['label_str'], vector
+
+        # First check vertical movement as it's independent of yaw
+        if abs_up > max(abs_forward, abs_right):
+            if up_component > 0:
+                return 2, 'up', vector
+            else:
+                return 3, 'down', vector
+        # Then check horizontal movement
+        elif abs_forward > abs_right:
+            if forward_component > 0:
+                return 0, 'forward', vector
+            else:
+                return 1, 'backward', vector
+        else:
+            if right_component > 0:
+                return 5, 'right', vector
+            else:
+                return 4, 'left', vector

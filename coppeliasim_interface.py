@@ -60,20 +60,11 @@ class CoppeliaSimInterface:
             # Enable explicit handling for the vision sensor
             self.sim.setExplicitHandling(self.handles['vision_sensor'], 1)
 
-            # Print acquired handles (modified to handle lists)
-            print("Handles acquired:")
-            for key, handle in self.handles.items():
-                if isinstance(handle, list):
-                    print(f"  {key} → {len(handle)} handles")
-                else:
-                    print(f"  {key} → {handle}")
-
         except Exception as e:
             print(f"[ERROR] Failed to access simulation objects: {e}")
             print(f"Current object paths: {self.object_paths}")  # Debug print
             self.stop_simulation()
             exit()
-
 
 
     def start_simulation(self):

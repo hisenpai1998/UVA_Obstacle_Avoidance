@@ -103,19 +103,19 @@ class KeyboardController:
         dx, dy = 0.0, 0.0
 
         # Local axes: forward and right
-        forward = np.array([np.cos(yaw), np.sin(yaw)])
-        right   = np.array([np.cos(yaw + np.pi / 2), np.sin(yaw + np.pi / 2)])
+        right = np.array([-np.cos(yaw), -np.sin(yaw)])
+        forward = np.array([-np.cos(yaw + np.pi / 2), -np.sin(yaw + np.pi / 2)])
 
-        if self.keys_pressed['a']:
+        if self.keys_pressed['w']:
             dx += forward[0] * step_size
             dy += forward[1] * step_size
-        if self.keys_pressed['d']:
+        if self.keys_pressed['s']:
             dx -= forward[0] * step_size
             dy -= forward[1] * step_size
-        if self.keys_pressed['w']:
+        if self.keys_pressed['a']:
             dx -= right[0] * step_size
             dy -= right[1] * step_size
-        if self.keys_pressed['s']:
+        if self.keys_pressed['d']:
             dx += right[0] * step_size
             dy += right[1] * step_size
         if self.keys_pressed['q']:

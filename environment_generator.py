@@ -40,19 +40,21 @@ class EnvironmentGenerator:
             self.sim_interface.sim.setObjectOrientation(h, -1, orientation)
         return h
 
-    """
-    Rotate the vision sensor to face the goal from UAV position.
 
-    """
     def point_camera_toward_goal(self):
+        """
+        Rotate the vision sensor to face the goal from UAV position.
+        Only uses yaw rotation to keep the UAV level while pointing toward the goal.
+        """
         target_pos = np.array(self.sim_interface.get_object_position('target'))
-        goal_pos   = np.array(self.sim_interface.get_object_position('goal'))
-        direction  = goal_pos - target_pos
-
-        yaw = np.arctan2(direction[1], direction[0])  # angle in XY plane
-
+        goal_pos = np.array(self.sim_interface.get_object_position('goal'))
+        direction = goal_pos - target_pos
+        
+        # Calculate horizontal angle (yaw) and invert it for correct orientation
+        yaw = np.arctan2(direction[1], direction[0]) + np.pi  # Add pi to invert the direction
+        
         # CoppeliaSim expects orientation in Euler angles [roll, pitch, yaw]
-        # We'll face the camera forward in XY by rotating around Z only (yaw)
+        # We keep roll and pitch at 0, only use yaw for horizontal rotation
         self.sim_interface.sim.setObjectOrientation(
             self.sim_interface.handles['drone'], -1, [0.0, 0.0, yaw]
         )
@@ -82,10 +84,16 @@ class EnvironmentGenerator:
         self.sim_interface.set_object_position('drone', uav_pos)
         self.sim_interface.set_object_position('target', uav_pos)
         self.sim_interface.set_object_position('goal', goal_pos)
-        self.point_camera_toward_goal()
+        
+        # Set initial UAV orientation to face the goal with inverted direction
+        direction = np.array(goal_pos) - np.array(uav_pos)
+        yaw = np.arctan2(direction[1], direction[0]) + np.pi  # Add pi to invert the direction
+        self.sim_interface.sim.setObjectOrientation(
+            self.sim_interface.handles['drone'], -1, [0.0, 0.0, yaw]
+        )
 
-        print(f"🚁 UAV/Target at {uav_pos} on {axis}-edge ({side}) inset")
-        print(f"🎯 Goal      at {goal_pos} on opposite {axis}-edge")
+        print(f" UAV/Target at {uav_pos} on {axis}-edge ({side}) inset")
+        print(f" Goal at {goal_pos} on opposite {axis}-edge")
 
         return uav_pos, goal_pos
 
