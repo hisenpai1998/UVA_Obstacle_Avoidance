@@ -41,6 +41,19 @@ UVA_Obstacle_Avoidance/
 ├── UAV_simulator.py         # UAV movement and update
 ├── keyboard_manager.py      # Manual key control (optional)
 ├── plot.py                  # For visualization
+├── check_saved_data.py      # Check datasets information
 ├── read_saved_data.py       # To load recorded data for offline analysis
 ├── APF_navigator.py         # Experimental: Artificial Potential Field method
 └── README.md                # You're reading this file
+
+
+## License
+
+This project is **private and proprietary**, created by **Hieu Tran Quang and Huy Duc Vu** as part of an academic course.
+
+🔒 **All rights reserved.**  
+Use, distribution, or modification without written permission is strictly prohibited.
+
+Authorized instructors or examiners may view this code for grading purposes.
+
+See the [LICENSE](./LICENSE) file for details.
