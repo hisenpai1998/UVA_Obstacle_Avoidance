@@ -1,3 +1,18 @@
+# -------------------------------------------------------------------------
+# Copyright (c) 2025 Hieu Tran Quang and Duc Huy Vu
+# All rights reserved.
+#
+# This source code is part of a private academic project submitted for
+# educational purposes only. It may be viewed and assessed by authorized
+# instructors and examiners as part of academic evaluation.
+#
+# Unauthorized use, reproduction, distribution, or modification of this
+# code, in whole or in part, is strictly prohibited without the prior
+# written consent of the authors.
+#
+# This file and project are NOT open source.
+# -------------------------------------------------------------------------
+
 """
 Essential configuration for simulation
 """	

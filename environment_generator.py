@@ -1,3 +1,18 @@
+# -------------------------------------------------------------------------
+# Copyright (c) 2025 Hieu Tran Quang and Duc Huy Vu
+# All rights reserved.
+#
+# This source code is part of a private academic project submitted for
+# educational purposes only. It may be viewed and assessed by authorized
+# instructors and examiners as part of academic evaluation.
+#
+# Unauthorized use, reproduction, distribution, or modification of this
+# code, in whole or in part, is strictly prohibited without the prior
+# written consent of the authors.
+#
+# This file and project are NOT open source.
+# -------------------------------------------------------------------------
+
 import random
 import numpy as np
 
@@ -12,7 +27,7 @@ class EnvironmentGenerator:
         self.fx, self.fy, self.fz = sim_interface.get_object_position('floor')
         self.UAV_SPAWN_HEIGHT = 1.0
         self.EDGE_INSET = 0.2
-        self.MIN_CLEARANCE = 1.0
+        self.MIN_CLEARANCE = 3.0
 
     def get_floor_extents(self):
         min_x = self.sim_interface.sim.getObjectFloatParameter(self.floor_handle, 15)[1]
@@ -101,22 +116,29 @@ class EnvironmentGenerator:
         min_x, max_x, min_y, max_y = self.get_floor_extents()
         for i in range(num_trees):
             for _ in range(30):
-                th = random.uniform(2.0, 3.0)
-                sx, sy = random.uniform(0.1, 0.2), random.uniform(0.1, 0.2)
+                th = random.uniform(4.0, 6.0)  # Taller trunk
+                sx, sy = random.uniform(0.2, 0.4), random.uniform(0.2, 0.4)  # Thicker trunk
                 x = random.uniform(min_x, max_x)
                 y = random.uniform(min_y, max_y)
+
                 if all(np.linalg.norm(np.array([x, y]) - np.array(p[:2])) > self.MIN_CLEARANCE for p in exclude_positions):
                     zc = self.fz + th / 2
                     trunk_h = self.create_box(f"TreeTrunk[{i}]", [x, y, zc], [sx, sy, th])
                     self.obstacle_manager.add_obstacle(trunk_h, is_dynamic=False)
-                    for j in range(random.randint(1, 3)):
-                        bl = random.uniform(0.5, 1.0)
-                        bh = random.uniform(th * 0.3, th * 0.9)
+
+                    for j in range(random.randint(2, 4)):
+                        bl = random.uniform(1.0, 2.0)
+                        bh = random.uniform(th * 0.4, th * 0.95)
                         bzc = self.fz + bh
                         yaw = random.uniform(0, 2 * np.pi)
                         od = sx / 2 + bl / 2
                         dx, dy = od * np.cos(yaw), od * np.sin(yaw)
-                        branch_h = self.create_box(f"TreeBranch[{i}_{j}]", [x + dx, y + dy, bzc], [bl, 0.1, 0.1], orientation=[0, 0, yaw])
+                        branch_h = self.create_box(
+                            f"TreeBranch[{i}_{j}]",
+                            [x + dx, y + dy, bzc],
+                            [bl, 0.1, 0.1],
+                            orientation=[0, 0, yaw]
+                        )
                         self.obstacle_manager.add_obstacle(branch_h, is_dynamic=False)
                     break
             else:

@@ -1,10 +1,26 @@
+# -------------------------------------------------------------------------
+# Copyright (c) 2025 Hieu Tran Quang and Duc Huy Vu
+# All rights reserved.
+#
+# This source code is part of a private academic project submitted for
+# educational purposes only. It may be viewed and assessed by authorized
+# instructors and examiners as part of academic evaluation.
+#
+# Unauthorized use, reproduction, distribution, or modification of this
+# code, in whole or in part, is strictly prohibited without the prior
+# written consent of the authors.
+#
+# This file and project are NOT open source.
+# -------------------------------------------------------------------------
+
+
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 
 # Path to the saved file
-file_path = "uav_stream_data.pkl"
-# file_path = "2.pkl"
+# file_path = "uav_stream_data.pkl"
+file_path = "1.pkl"
 # Load all frames into memory
 frames = []
 try:
@@ -38,7 +54,7 @@ fig = plt.figure(figsize=(12, 5))
 # Depth map (left subplot)
 ax_depth = fig.add_subplot(121)
 depth_display = ax_depth.imshow(
-    frames[0]["depth"], cmap="jet", interpolation="nearest", vmin=0, vmax=1
+    frames[0]["depth"], cmap="gray", interpolation="nearest", vmin=0, vmax=1
 )
 cbar = fig.colorbar(depth_display, ax=ax_depth, label="Depth (meters)")
 ax_depth.set_title(f"Depth Map - Frame 1/{len(frames)}")
@@ -60,6 +76,7 @@ path_x, path_y = [], []
 def update_plot():
     global current_frame, path_x, path_y
     frame_data = frames[current_frame]
+
 
     # Update depth map
     depth_display.set_data(frame_data["depth"])
