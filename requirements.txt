@@ -1,0 +1,8 @@
+# Core dependencies for running the CoppeliaSim depth-based UAV avoidance demo
+# Install: pip install -r requirements.txt
+
+coppeliasim-zmqremoteapi-client
+numpy
+scipy
+matplotlib
+pynput
